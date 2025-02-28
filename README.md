@@ -10,7 +10,7 @@
 Custom module for Odoo 17 that bridges the official WhatsApp Business API with Odoo Discuss interface, enabling seamless WhatsApp conversation management directly within the Odoo environment.
 
 <p align="center">
-  <img src="[https://i.ibb.co/LDXnkL0/Picture1.png"] alt="Module Screenshot" width="800"/>
+  <img src="https://i.ibb.co/LDXnkL0p/Picture1.png"/>
 </p>
 
 ## 📋 Table of Contents
