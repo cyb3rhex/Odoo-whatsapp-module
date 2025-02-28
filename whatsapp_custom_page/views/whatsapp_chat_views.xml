@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- client action -->
+    <record id="action_whatsapp_chat" model="ir.actions.client">
+        <field name="name">WhatsApp Chat</field>
+        <field name="tag">whatsapp_chat_action</field>
+    </record>
+
+    <!-- menu items -->
+    <menuitem id="menu_whatsapp_chat"
+              name="WhatsApp Chat"
+              action="action_whatsapp_chat"
+              sequence="10"
+              web_icon="whatsapp_custom_page,static/description/icon.png"/>
+
+    <!-- sub menu -->
+    <menuitem id="menu_whatsapp_chat_main"
+              name="Chat"
+              parent="menu_whatsapp_chat"
+              action="action_whatsapp_chat"
+              sequence="1"/>
+</odoo> 

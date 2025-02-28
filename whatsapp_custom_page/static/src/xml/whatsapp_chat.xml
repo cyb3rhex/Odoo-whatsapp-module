@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="whatsapp_custom_page.ChatWindow" owl="1">
+        <div class="o_whatsapp_chat">
+            <div class="o_whatsapp_sidebar">
+                <div class="o_whatsapp_header">
+                    <div class="o_whatsapp_user">
+                        <img t-att-src="state.userInfo.avatarUrl" class="o_whatsapp_avatar"/>
+                        <span t-esc="state.userInfo.name"/>
+                    </div>
+                </div>
+                <div class="o_whatsapp_search">
+                    <input type="text" 
+                           placeholder="Search or start new chat" 
+                           class="o_whatsapp_search_input"
+                           t-ref="searchInput"/>
+                </div>
+                <div class="o_whatsapp_conversations">
+                    <t t-foreach="state.displayedConversations" t-as="conversation" t-key="conversation.id">
+                        <div class="o_whatsapp_conversation" 
+                             t-att-class="{
+                                 'active': state.selectedConversation and state.selectedConversation.id === conversation.id,
+                                 'message-sent': conversation.is_sent
+                             }"
+                             t-on-click="() => this._onClickConversation(conversation)">
+                            <div class="o_whatsapp_conversation_avatar">
+                                <img t-att-src="this._getPartnerAvatarUrl(conversation.partner_id)"/>
+                            </div>
+                            <div class="o_whatsapp_conversation_content">
+                                <div class="o_whatsapp_conversation_header">
+                                    <div class="o_whatsapp_conversation_info">
+                                        <span class="o_whatsapp_conversation_name">
+                                            <t t-esc="conversation.partner_name || ''"/> (<t t-esc="conversation.phone"/>)
+                                        </span>
+                                    </div>
+                                    <span class="o_whatsapp_conversation_date" t-esc="this.formatDateTimeField(conversation.last_message_date)"/>
+                                </div>
+                                <div class="o_whatsapp_conversation_message">
+                                    <span class="o_whatsapp_conversation_preview" t-esc="conversation.last_message"/>
+                                    <t t-if="!conversation.is_sent and conversation.last_message_author_id !== user.partnerId and conversation.total_unread > 0">
+                                        <span class="o_whatsapp_conversation_badge badge badge-pill badge-primary" 
+                                              t-att-class="{'d-none': conversation.is_sent || conversation.last_message_author_id === user.partnerId}"
+                                              t-att-data-sent="conversation.is_sent"
+                                              t-esc="conversation.total_unread"/>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                    <div class="o_whatsapp_pager" t-if="state.total > state.limit">
+                        <Pager
+                            offset="state.offset"
+                            limit="state.limit"
+                            total="state.total"
+                            onUpdate="(params) => this._onPagerChanged(params)"
+                        />
+                    </div>
+                </div>
+            </div>
+            <div class="o_whatsapp_chat_content">
+                <t t-if="state.selectedConversation">
+                    <div class="o_whatsapp_chat_header">
+                        <div class="o_whatsapp_chat_info">
+                            <img t-att-src="this._getPartnerAvatarUrl(state.selectedConversation.partner_id)" 
+                                 class="o_whatsapp_chat_avatar"/>
+                            <div class="o_whatsapp_chat_contact_info">
+                                <span class="o_whatsapp_chat_name">
+                                    <t t-esc="state.selectedConversation.partner_name || ''"/> (<t t-esc="state.selectedConversation.phone"/>)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="o_whatsapp_messages" t-ref="messageContainer" t-on-scroll="_onScroll">
+                        <t t-if="state.loading">
+                            <div class="o_whatsapp_loading">
+                                <i class="fa fa-spinner fa-spin"/> Loading messages...
+                            </div>
+                        </t>
+                        <div class="o_whatsapp_messages_list">
+                            <t t-foreach="state.messages" t-as="message" t-key="message.id">
+                                <div class="o_whatsapp_message_row">
+                                    <div t-attf-class="o_whatsapp_message #{message.direction === 'outbound' ? 'message-sent' : 'message-received'}">
+                                        <div class="o_whatsapp_message_content">
+                                            <t t-if="message.author_name">
+                                                <div class="o_whatsapp_message_author o-mail-Message-author">
+                                                    <span t-esc="message.author_name"/>
+                                                </div>
+                                            </t>
+                                            <t t-if="message.body">
+                                                <div class="o_whatsapp_message_body" t-esc="message.body"/>
+                                            </t>
+                                            <t t-if="message.attachment_ids and message.attachment_ids.length">
+                                                <div class="o_whatsapp_message_attachments">
+                                                    <t t-foreach="message.attachment_ids" t-as="attachment" t-key="attachment.id">
+                                                        <div class="o_whatsapp_attachment" t-att-data-id="attachment.id">
+                                                            <t t-if="attachment.mimetype and attachment.mimetype.startsWith('image/')">
+                                                                <img t-att-src="attachment.url || `/web/image/${attachment.id}?unique=${Date.now()}`"
+                                                                     class="o_whatsapp_attachment_image"
+                                                                     t-att-alt="attachment.name"
+                                                                     t-att-data-attachment-id="attachment.id"
+                                                                     t-att-data-url="attachment.url || `/web/image/${attachment.id}`"
+                                                                     t-on-click="() => this.onImageClick(attachment)"/>
+                                                            </t>
+                                                            <t t-elif="attachment.mimetype and attachment.mimetype.startsWith('video/')">
+                                                                <div class="o_whatsapp_video_preview" t-on-click="() => this.onVideoClick(attachment)">
+                                                                    <video class="o_whatsapp_video_thumbnail" 
+                                                                           t-att-src="attachment.url || `/web/content/${attachment.id}/datas`"
+                                                                           preload="metadata">
+                                                                        Your browser does not support the video element.
+                                                                    </video>
+                                                                    <div class="o_whatsapp_video_play_button">
+                                                                        <i class="fa fa-play"/>
+                                                                    </div>
+                                                                </div>
+                                                            </t>
+                                                            <t t-elif="attachment.mimetype and attachment.mimetype.startsWith('audio/')">
+                                                                <div class="o_whatsapp_voice_player">
+                                                                    <div class="o_whatsapp_voice_player_inner">
+                                                                        <button class="o_whatsapp_voice_play_button" t-on-click="(ev) => this.toggleAudio(ev, attachment)">
+                                                                            <i class="fa fa-play"/>
+                                                                        </button>
+                                                                        <div class="o_whatsapp_voice_content">
+                                                                            <div class="o_whatsapp_voice_waveform">
+                                                                                <div class="o_whatsapp_voice_wave">
+                                                                                    <t t-foreach="new Array(40)" t-as="bar" t-key="bar_index">
+                                                                                        <div class="o_whatsapp_voice_bar"/>
+                                                                                    </t>
+                                                                                </div>
+                                                                                <div class="o_whatsapp_voice_progress"/>
+                                                                            </div>
+                                                                            <div class="o_whatsapp_voice_info">
+                                                                                <span class="o_whatsapp_voice_duration">0:00</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <audio t-att-src="attachment.url || `/web/content/${attachment.id}/datas`" 
+                                                                               t-att-type="attachment.mimetype"
+                                                                               preload="metadata"
+                                                                               class="d-none"/>
+                                                                    </div>
+                                                                </div>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <a t-att-href="attachment.url || `/web/content/${attachment.id}/datas`" 
+                                                                   class="o_whatsapp_attachment_link"
+                                                                   target="_blank">
+                                                                    <i class="fa fa-file"/>
+                                                                    <span t-esc="attachment.name"/>
+                                                                </a>
+                                                            </t>
+                                                        </div>
+                                                    </t>
+                                                </div>
+                                            </t>
+                                        </div>
+                                        <div class="o_whatsapp_message_info">
+                                            <span class="o_whatsapp_message_time" t-esc="this.formatDateTimeField(message.create_date)"/>
+                                            <t t-if="message.direction === 'outbound'">
+                                                <span t-attf-class="o_whatsapp_message_status fa fa-check #{message.status === 'read' ? 'text-primary' : message.status === 'delivered' ? 'text-success' : ''}"/>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                    <div class="o_whatsapp_composer">
+                        <div class="o_whatsapp_attachments">
+                            <div class="o_whatsapp_attachment_buttons">
+                                <button class="btn btn-link o_whatsapp_attach" t-on-click="() => this.fileInputRef.el?.click()">
+                                    <i class="fa fa-paperclip"/>
+                                    <input type="file" 
+                                           class="d-none" 
+                                           multiple="multiple" 
+                                           accept="image/*,video/*,audio/*,application/*" 
+                                           t-ref="fileInput" 
+                                           t-on-change="_onAttachmentChange"/>
+                                </button>
+                                
+                                <button t-if="!state.isRecording" 
+                                        class="btn btn-link o_whatsapp_voice" 
+                                        t-on-click="startVoiceRecording">
+                                    <i class="fa fa-microphone"/>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div t-if="state.isRecording" class="o_whatsapp_voice_recording">
+                            <div class="o_whatsapp_voice_recording_indicator">
+                                <i class="fa fa-microphone text-danger"/>
+                                <span class="o_whatsapp_recording_duration" t-esc="formatRecordingDuration(state.recordingDuration)"/>
+                            </div>
+                            <div class="o_whatsapp_voice_recording_controls">
+                                <button class="btn btn-danger btn-sm" t-on-click="cancelVoiceRecording">
+                                    <i class="fa fa-times"/> Cancel
+                                </button>
+                                <button class="btn btn-success btn-sm" t-on-click="stopVoiceRecording">
+                                    <i class="fa fa-check"/> Send
+                                </button>
+                            </div>
+                        </div>
+
+                        <input t-if="!state.isRecording" 
+                               type="text" 
+                               class="o_whatsapp_input" 
+                               placeholder="Type a message" 
+                               t-ref="messageInput"
+                               t-on-keydown="_onKeydown"/>
+
+                        <button t-if="!state.isRecording" 
+                                class="btn btn-primary o_whatsapp_send" 
+                                t-on-click="_onClickSend">
+                            <i class="fa fa-paper-plane"/>
+                        </button>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="o_whatsapp_placeholder">
+                        <div class="o_whatsapp_placeholder_content">
+                            <i class="fa fa-whatsapp fa-4x mb-3"/>
+                            <h4>Select a conversation to start chatting</h4>
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="whatsapp_custom_page.Conversation">
+        <div class="o_whatsapp_conversation" t-att-data-phone="phone">
+            <div class="o_whatsapp_conv_avatar">
+                <img t-att-src="avatar_url" alt="Contact"/>
+            </div>
+            <div class="o_whatsapp_conv_info">
+                <div class="o_whatsapp_conv_name" t-esc="partner_name"/>
+                <div class="o_whatsapp_conv_preview" t-esc="last_message"/>
+            </div>
+            <div class="o_whatsapp_conv_time" t-esc="last_message_time"/>
+        </div>
+    </t>
+
+    <t t-name="whatsapp_custom_page.Message">
+        <div t-attf-class="o_whatsapp_message #{className}">
+            <div class="o_whatsapp_message_content">
+                <p><t t-esc="body"/></p>
+                <t t-if="attachment_ids and attachment_ids.length">
+                    <div class="o_whatsapp_attachments">
+                        <t t-foreach="attachment_ids" t-as="attachment">
+                            <div class="o_whatsapp_attachment">
+                                <a t-att-href="attachment.url" target="_blank">
+                                    <i class="fa fa-paperclip"/> <t t-esc="attachment.name"/>
+                                </a>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+            </div>
+            <div class="o_whatsapp_message_info">
+                <span class="o_whatsapp_message_time" t-esc="time"/>
+                <t t-if="direction === 'outbound'">
+                    <i t-attf-class="fa fa-check #{status === 'sent' ? 'text-success' : ''}"/>
+                </t>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="whatsapp_custom_page.ImagePreviewDialog" owl="1">
+        <Dialog size="'xl'" title="false" contentClass="'o_whatsapp_preview_dialog'">
+            <div class="o_whatsapp_image_preview">
+                <div class="modal-header border-0 position-absolute w-100" style="z-index: 1; background: rgba(0, 0, 0, 0.5);">
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 d-flex align-items-center justify-content-center" 
+                     style="background-color: rgba(0, 0, 0, 0.95); min-height: 80vh;">
+                    <img t-if="props.attachment" 
+                         t-att-src="props.attachment.url"
+                         class="img-fluid"
+                         t-att-alt="props.attachment.name || 'Image Preview'"
+                         style="max-width: 95%; max-height: calc(100vh - 60px); object-fit: contain; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);"
+                         onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '&lt;div class=\'text-white\'&gt;Failed to load image&lt;/div&gt;')"/>
+                </div>
+            </div>
+        </Dialog>
+    </t>
+
+    <t t-name="whatsapp_custom_page.VideoPreviewDialog" owl="1">
+        <Dialog size="'xl'" title="false" contentClass="'o_whatsapp_video_dialog'">
+            <div class="o_whatsapp_video_preview">
+                <div class="modal-header border-0 position-absolute w-100" style="z-index: 1; background: rgba(0, 0, 0, 0.5);">
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 d-flex align-items-center justify-content-center">
+                    <video t-if="props.attachment" 
+                           t-att-src="props.attachment.url"
+                           controls="controls"
+                           autoplay="autoplay"
+                           class="img-fluid"
+                           style="max-height: calc(100vh - 60px);">
+                        Your browser does not support the video element.
+                    </video>
+                </div>
+            </div>
+        </Dialog>
+    </t>
+</templates>

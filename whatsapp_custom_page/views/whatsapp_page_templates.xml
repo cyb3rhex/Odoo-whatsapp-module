@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="chat_page" name="WhatsApp Chat">
+        <t t-call="web.layout">
+            <t t-set="head">
+                <t t-call-assets="web.assets_common" t-js="false"/>
+                <t t-call-assets="web.assets_backend" t-js="false"/>
+                <t t-call-assets="web.assets_common" t-css="false"/>
+                <t t-call-assets="web.assets_backend" t-css="false"/>
+            </t>
+            <div class="o_main_content">
+                <div class="o_whatsapp_chat">
+                    <div class="whatsapp-container">
+                        <!-- left sidebar with conversations -->
+                        <div class="conversation-list">
+                            <div class="header">
+                                <div class="profile">
+                                    <t t-if="account">
+                                        <span t-field="account.name"/>
+                                    </t>
+                                </div>
+                            </div>
+                            <div class="conversations">
+                                <t t-foreach="conversations" t-as="conversation">
+                                    <div class="conversation-item" t-att-data-id="conversation.id">
+                                        <div class="avatar">
+                                            <img t-att-src="conversation.partner_id ? ('/web/image/res.partner/' + str(conversation.partner_id) + '/avatar_128') : '/web/static/img/placeholder.png'" alt="Contact"/>
+                                        </div>
+                                        <div class="conversation-info">
+                                            <div class="name">
+                                                <t t-esc="conversation.partner_name or conversation.phone"/>
+                                            </div>
+                                            <div class="last-message">
+                                                <t t-esc="conversation.last_message"/>
+                                            </div>
+                                        </div>
+                                        <div class="time">
+                                            <t t-esc="conversation.last_message_date"/>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                            <!-- Pagination Component -->
+                            <div class="o_whatsapp_pager" t-if="state.total > state.limit">
+                                <Pager 
+                                    offset="state.offset"
+                                    limit="state.limit"
+                                    total="state.total"
+                                    onUpdate="_onPagerChanged"/>
+                            </div>
+                        </div>
+                        
+                        <!-- right side chat area -->
+                        <div class="chat-area">
+                            <div class="chat-header">
+                                <div class="selected-contact">
+                                    <span>Select a conversation</span>
+                                </div>
+                            </div>
+                            <div class="messages" t-ref="messageContainer" t-on-scroll="_onScroll">
+                                <div t-if="loading" class="loading-indicator">
+                                    <i class="fa fa-spinner fa-spin"/>
+                                </div>
+                                <t t-foreach="messages" t-as="message">
+                                    <div t-attf-class="message #{message.direction}">
+                                        <div class="message-content">
+                                            <div class="message-text" t-esc="message.body"/>
+                                            <div class="message-time">
+                                                <t t-esc="message.create_date"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                            <div class="message-input">
+                                <input type="text" t-ref="messageInput" placeholder="Type a message" t-on-keydown="_onKeydown"/>
+                                <button class="send-button" t-on-click="_onClickSend">
+                                    <i class="fa fa-paper-plane"/>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

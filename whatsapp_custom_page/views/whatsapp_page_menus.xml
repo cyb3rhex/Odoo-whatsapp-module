@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- define the action first -->
+    <record id="action_whatsapp_custom_chat" model="ir.actions.client">
+        <field name="name">WhatsApp Custom Chat</field>
+        <field name="tag">whatsapp_chat</field>
+    </record>
+
+    <!-- create main WhatsApp menu -->
+    <menuitem id="menu_whatsapp_custom_root"
+        name="WhatsApp Custom"
+        web_icon="whatsapp_custom_page,static/description/icon.png"
+        sequence="10"/>
+
+    <!-- create submenu for WhatsApp Chat -->
+    <menuitem id="menu_whatsapp_custom_chat"
+        name="Custom Chat Interface"
+        parent="menu_whatsapp_custom_root"
+        sequence="10"
+        action="action_whatsapp_custom_chat"/>
+
+    <template id="chat_page" name="WhatsApp Chat">
+        <t t-call="web.layout">
+            <t t-set="head">
+                <t t-call-assets="web.assets_common" t-js="false"/>
+                <t t-call-assets="web.assets_backend" t-js="false"/>
+                <t t-call-assets="whatsapp_custom_page.assets_whatsapp" t-js="false"/>
+                
+                <t t-call-assets="web.assets_common" t-css="false"/>
+                <t t-call-assets="web.assets_backend" t-css="false"/>
+                <t t-call-assets="whatsapp_custom_page.assets_whatsapp" t-css="false"/>
+            </t>
+            <div class="o_whatsapp_chat">
+                <div class="o_whatsapp_sidebar">
+                    <div class="o_whatsapp_header">
+                        <div class="o_whatsapp_user">
+                            <img t-att-src="user.avatar_128" class="o_whatsapp_avatar"/>
+                            <span t-esc="user.name"/>
+                        </div>
+                    </div>
+                    <div class="o_whatsapp_search">
+                        <input type="text" placeholder="Search or start new chat" class="o_whatsapp_search_input"/>
+                    </div>
+                    <div class="o_whatsapp_conversations">
+                        <t t-foreach="channels" t-as="channel">
+                            <div class="o_whatsapp_conversation" t-att-data-id="channel.id">
+                                <div class="o_whatsapp_conversation_avatar">
+                                    <img t-att-src="channel.whatsapp_partner_id.avatar_128 or '/web/static/img/avatar.png'"/>
+                                </div>
+                                <div class="o_whatsapp_conversation_content">
+                                    <div class="o_whatsapp_conversation_header">
+                                        <span class="o_whatsapp_conversation_name" t-esc="channel.whatsapp_partner_id.name or channel.name"/>
+                                        <span class="o_whatsapp_conversation_date" t-esc="channel.last_message_date"/>
+                                    </div>
+                                    <div class="o_whatsapp_conversation_message">
+                                        <t t-if="channel.last_message">
+                                            <span class="o_whatsapp_conversation_preview" t-esc="channel.last_message"/>
+                                        </t>
+                                    </div>
+                                </div>
+                                <t t-if="channel.unread_count > 0">
+                                    <div class="o_whatsapp_conversation_badge">
+                                        <span class="badge badge-pill badge-primary" t-esc="channel.unread_count"/>
+                                    </div>
+                                </t>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+                <div class="o_whatsapp_chat_content">
+                    <div class="o_whatsapp_chat_header d-none">
+                        <div class="o_whatsapp_chat_info">
+                            <img class="o_whatsapp_chat_avatar"/>
+                            <span class="o_whatsapp_chat_name"/>
+                        </div>
+                    </div>
+                    <div class="o_whatsapp_messages">
+                        <div class="o_whatsapp_message_placeholder">
+                            Select a conversation to start chatting
+                        </div>
+                    </div>
+                    <div class="o_whatsapp_composer d-none">
+                        <div class="o_whatsapp_attachments">
+                            <button class="btn btn-link o_whatsapp_attach">
+                                <i class="fa fa-paperclip"/>
+                                <input type="file" class="d-none o_whatsapp_attachment" multiple="multiple"/>
+                            </button>
+                        </div>
+                        <input type="text" class="o_whatsapp_input" placeholder="Type a message"/>
+                        <button class="btn btn-primary o_whatsapp_send">
+                            <i class="fa fa-paper-plane"/>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="whatsapp_message" name="WhatsApp Message">
+        <div t-attf-class="o_whatsapp_message #{message.direction === 'outbound' ? 'message-sent' : 'message-received'}">
+            <div class="o_whatsapp_message_content">
+                <t t-if="message.author_name">
+                    <div class="o_whatsapp_message_author">
+                        <span t-esc="message.author_name"/>
+                    </div>
+                </t>
+                <div class="o_whatsapp_message_body" t-raw="message.body"/>
+                <t t-if="message.attachment_ids and message.attachment_ids.length > 0">
+                    <div class="o_whatsapp_message_attachments">
+                        <t t-foreach="message.attachment_ids" t-as="attachment">
+                            <div class="o_whatsapp_attachment">
+                                <a t-att-href="attachment.url" target="_blank">
+                                    <t t-if="attachment.mimetype.startsWith('image')">
+                                        <img t-att-src="attachment.url" t-att-alt="attachment.name"/>
+                                    </t>
+                                    <t t-else="">
+                                        <i class="fa fa-paperclip"/> <span t-esc="attachment.name"/>
+                                    </t>
+                                </a>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+            </div>
+            <div class="o_whatsapp_message_info">
+                <span class="o_whatsapp_message_time" t-esc="message.create_date"/>
+                <t t-if="message.direction === 'outbound'">
+                    <span t-attf-class="o_whatsapp_message_status fa fa-check #{message.status === 'read' ? 'text-primary' : message.status === 'delivered' ? 'text-success' : ''}"/>
+                </t>
+            </div>
+        </div>
+    </template>
+</odoo>

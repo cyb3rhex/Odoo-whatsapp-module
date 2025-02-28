@@ -1,0 +1,131 @@
+.o_whatsapp_messages {
+    padding: 16px;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+    background-color: #efeae2;
+}
+
+.o_whatsapp_message {
+    max-width: 65%;
+    margin: 2px 0;
+    padding: 6px 7px 8px 9px;
+    position: relative;
+}
+
+.message-sent {
+    margin-left: auto;
+    background-color: #dcf8c6;
+}
+
+.message-received {
+    margin-right: auto;
+    background-color: #fff;
+}
+
+.o_whatsapp_message_content {
+    position: relative;
+    max-width: 100%;
+    word-wrap: break-word;
+}
+
+.o_whatsapp_message_attachments {
+    margin: 4px 0 !important;
+    max-width: 200px !important;
+    width: 200px !important;
+}
+
+.o_whatsapp_attachment {
+    width: 200px !important;
+    height: 200px !important;
+    margin: 0 !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background-color: #f0f2f5 !important;
+    position: relative !important;
+    display: block !important;
+}
+
+.o_whatsapp_attachment_image {
+    width: 200px !important;
+    height: 200px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    display: block !important;
+}
+
+/* Voice message styles */
+.o_whatsapp_voice_player {
+    width: 100% !important;
+    height: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px !important;
+}
+
+.o_whatsapp_audio {
+    width: 180px !important;
+    height: 40px !important;
+}
+
+.o_whatsapp_attachment_link {
+    width: 100% !important;
+    height: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 8px !important;
+    text-decoration: none !important;
+    color: #075e54 !important;
+}
+
+.o_whatsapp_attachment_link i {
+    margin-right: 8px;
+}
+
+.o_whatsapp_message_info {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    font-size: 0.75rem;
+    color: #667781;
+    margin-top: 2px;
+}
+
+.o_whatsapp_message_time {
+    margin-right: 4px;
+}
+
+/* Dialog styles for image preview */
+.modal-dialog.modal-xl .o_whatsapp_image_preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+}
+
+.modal-dialog.modal-xl .o_whatsapp_image_preview img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Message container */
+.o_whatsapp_message_row {
+    margin: 4px 0;
+}
+
+.o_whatsapp_message_status {
+    font-size: 0.875rem;
+}
+
+/* Loading spinner for images */
+.o_whatsapp_image_loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #075e54;
+} 
